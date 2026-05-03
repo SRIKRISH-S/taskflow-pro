@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: taskflow-pro
+    env: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start
+    plan: free
+    disk:
+      name: taskflow-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: file:/data/prod.db
+      - key: NEXTAUTH_URL
+        generateValue: true
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: AUTH_SECRET
+        generateValue: true
