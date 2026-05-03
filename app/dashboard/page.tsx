@@ -36,7 +36,7 @@ export default function DashboardPage() {
     const es = new EventSource("/api/sse");
     es.onmessage = (e) => {
       const data = JSON.parse(e.data);
-      if (data.type === "TASK_CREATED") setTasks(p => [data.task, ...p]);
+      if (data.type === "TASK_CREATED") setTasks(p => p.some(t=>t.id===data.task.id) ? p : [data.task,...p]);
       if (data.type === "TASK_UPDATED") setTasks(p => p.map(t => t.id === data.task.id ? data.task : t));
       if (data.type === "TASK_DELETED") setTasks(p => p.filter(t => t.id !== data.taskId));
     };
