@@ -61,8 +61,8 @@ export async function POST(req: Request) {
 
     broadcast({ type: "TASK_CREATED", task });
 
-    // Instantly send an email if the task is "To Do"
-    if (task.status === "todo" && session.user.email) {
+    // Instantly send an email if the task is not done
+    if (task.status !== "done" && session.user.email) {
       let timeHtml = "<p>Good luck completing this task!</p>";
       
       if (task.dueDate) {
