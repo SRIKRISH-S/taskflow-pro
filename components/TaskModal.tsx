@@ -27,7 +27,7 @@ export default function TaskModal({ task, onClose, onSaved }: Props) {
         description: task.description || "",
         status: task.status,
         priority: task.priority,
-        dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
+        dueDate: task.dueDate ? new Date(new Date(task.dueDate).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "",
         tags: JSON.parse(task.tags || "[]").join(", "),
       });
     } else {
@@ -92,7 +92,7 @@ export default function TaskModal({ task, onClose, onSaved }: Props) {
           </div>
           <div>
             <label className="label">Due Date</label>
-            <input id="task-due" className="input" type="date" value={form.dueDate} onChange={e=>setForm({...form,dueDate:e.target.value})}/>
+            <input id="task-due" className="input" type="datetime-local" value={form.dueDate} onChange={e=>setForm({...form,dueDate:e.target.value})}/>
           </div>
           <div>
             <label className="label">Tags <span style={{color:"var(--text3)",fontWeight:400}}>(comma separated)</span></label>
