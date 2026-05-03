@@ -60,6 +60,11 @@ function TasksContent() {
     });
   }
 
+  function handleCompleteFast(task: Task) {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#06b6d4', '#7c3aed'] });
+    setTasks(p => p.map(t => t.id === task.id ? task : t));
+  }
+
   const filteredTasks = tasks.filter(t => {
     const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase());
     return matchSearch;
@@ -165,7 +170,7 @@ function TasksContent() {
                           <Draggable key={t.id} draggableId={t.id} index={index}>
                             {(provided, snapshot) => (
                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, opacity: snapshot.isDragging ? 0.8 : 1 }}>
-                                <TaskCard task={t} onEdit={t=>{setEditTask(t);setShowModal(true);}} onDelete={id=>setTasks(p=>p.filter(x=>x.id!==id))}/>
+                                <TaskCard task={t} onEdit={t=>{setEditTask(t);setShowModal(true);}} onDelete={id=>setTasks(p=>p.filter(x=>x.id!==id))} onComplete={handleCompleteFast}/>
                               </div>
                             )}
                           </Draggable>

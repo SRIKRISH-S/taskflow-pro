@@ -61,48 +61,53 @@ export async function POST(req: Request) {
 
     broadcast({ type: "TASK_CREATED", task });
 
-    // Instantly send an email if the task is "To Do" and has a due date
-    if (task.status === "todo" && task.dueDate && session.user.email) {
-      const now = new Date();
-      const due = new Date(task.dueDate);
-      const diffMs = due.getTime() - now.getTime();
+    // Instantly send an email if the task is "To Do"
+    if (task.status === "todo" && session.user.email) {
+      let timeHtml = "<p>Good luck completing this task!</p>";
       
-      if (diffMs > 0) {
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      if (task.dueDate) {
+        const now = new Date();
+        const due = new Date(task.dueDate);
+        const diffMs = due.getTime() - now.getTime();
         
-        let timeLeftText = "";
-        if (diffHours > 24) timeLeftText = `${Math.floor(diffHours / 24)} days`;
-        else if (diffHours > 0) timeLeftText = `${diffHours} hours`;
-        else timeLeftText = `${diffMinutes} minutes`;
-
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        // Don't await it so we don't block the API response
-        transporter.sendMail({
-          from: `"TaskFlow Pro" <${process.env.EMAIL_USER}>`,
-          to: session.user.email,
-          subject: `🎯 New Task: "${task.title}"`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px;">
-              <h2 style="color: #7c3aed;">New Task Assigned!</h2>
-              <p>Hi ${session.user.name?.split(" ")[0] || "there"},</p>
-              <p>You have just created a new task on your board:</p>
-              <div style="background: #f3f4f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
-                <h3 style="margin: 0 0 8px 0;">${task.title}</h3>
-                <p style="margin: 0;">You have exactly <strong>${timeLeftText}</strong> to complete this task!</p>
-              </div>
-              <p>Good luck!</p>
-            </div>
-          `,
-        }).catch(console.error);
+        if (diffMs > 0) {
+          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          
+          let timeLeftText = "";
+          if (diffHours > 24) timeLeftText = `${Math.floor(diffHours / 24)} days and ${diffHours % 24} hours`;
+          else if (diffHours > 0) timeLeftText = `${diffHours} hours and ${diffMinutes} minutes`;
+          else timeLeftText = `${diffMinutes} minutes`;
+          
+          timeHtml = `<p style="margin: 0;">You have exactly <strong>${timeLeftText}</strong> to complete this task! Good luck!</p>`;
+        }
       }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      // Don't await it so we don't block the API response
+      transporter.sendMail({
+        from: `"TaskFlow Pro" <${process.env.EMAIL_USER}>`,
+        to: session.user.email,
+        subject: `🎯 New Task: "${task.title}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #7c3aed;">New Task Assigned!</h2>
+            <p>Hi ${session.user.name?.split(" ")[0] || "there"},</p>
+            <p>You have just created a new task on your board:</p>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <h3 style="margin: 0 0 8px 0;">${task.title}</h3>
+              ${timeHtml}
+            </div>
+          </div>
+        `,
+      }).catch(console.error);
     }
 
     return NextResponse.json(task, { status: 201 });

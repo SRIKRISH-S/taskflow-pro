@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import TaskModal from "@/components/TaskModal";
 import TaskCard from "@/components/TaskCard";
+import confetti from "canvas-confetti";
 
 type Task = { id:string;title:string;description?:string;status:string;priority:string;dueDate?:string;tags:string;createdAt:string; };
 
@@ -56,6 +57,11 @@ export default function DashboardPage() {
       const exists = p.find(t=>t.id===task.id);
       return exists ? p.map(t=>t.id===task.id?task:t) : [task,...p];
     });
+  }
+
+  function handleCompleteFast(task: Task) {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#06b6d4', '#7c3aed'] });
+    setTasks(p => p.map(t => t.id === task.id ? task : t));
   }
 
   return (
@@ -113,7 +119,7 @@ export default function DashboardPage() {
       ) : (
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
           {recent.map(t=>(
-            <TaskCard key={t.id} task={t} onEdit={t=>{setEditTask(t);setShowModal(true);}} onDelete={id=>setTasks(p=>p.filter(x=>x.id!==id))}/>
+            <TaskCard key={t.id} task={t} onEdit={t=>{setEditTask(t);setShowModal(true);}} onDelete={id=>setTasks(p=>p.filter(x=>x.id!==id))} onComplete={handleCompleteFast}/>
           ))}
         </div>
       )}

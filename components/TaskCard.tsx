@@ -30,7 +30,7 @@ function getTimeLeft(dueDate?: string) {
   return `${Math.floor(diffHours)} hrs left`;
 }
 
-export default function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) => void; onDelete: (id: string) => void }) {
+export default function TaskCard({ task, onEdit, onDelete, onComplete }: { task: Task; onEdit: (t: Task) => void; onDelete: (id: string) => void; onComplete?: (t: Task) => void }) {
   const tags: string[] = JSON.parse(task.tags || "[]");
   const overdue = isOverdue(task.dueDate) && task.status !== "done";
   const dueSoon = isDueSoon(task.dueDate) && task.status !== "done";
@@ -43,11 +43,29 @@ export default function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdi
     else toast("Failed to delete", "error");
   }
 
+  async function handleComplete(e: React.MouseEvent) {
+    e.stopPropagation();
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "done" })
+    });
+    if (res.ok) {
+      if (onComplete) onComplete({ ...task, status: "done" });
+      toast("Task completed! 🎉", "success");
+    } else toast("Failed to complete task", "error");
+  }
+
   return (
     <div className={`task-card priority-${task.priority} fade-in`} onClick={() => onEdit(task)}>
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:10}}>
         <h3 style={{fontWeight:600,fontSize:14,lineHeight:1.4,flex:1,textDecoration:task.status==="done"?"line-through":"none",color:task.status==="done"?"var(--text3)":"var(--text)"}}>{task.title}</h3>
-        <button onClick={handleDelete} className="btn btn-icon" style={{background:"transparent",color:"var(--text3)",flexShrink:0,padding:4,fontSize:12}} title="Delete">✕</button>
+        <div style={{display:"flex",gap:4,flexShrink:0}}>
+          {task.status !== "done" && (
+            <button onClick={handleComplete} className="btn btn-icon" style={{background:"transparent",color:"var(--success)",padding:4,fontSize:14}} title="Mark as Done">✓</button>
+          )}
+          <button onClick={handleDelete} className="btn btn-icon" style={{background:"transparent",color:"var(--text3)",padding:4,fontSize:12}} title="Delete">✕</button>
+        </div>
       </div>
 
       {task.description && <p style={{color:"var(--text2)",fontSize:13,lineHeight:1.5,marginBottom:10,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{task.description}</p>}
